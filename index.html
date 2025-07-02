@@ -9,23 +9,23 @@
       background-color: #0c0c0c;
       color: #00ff66;
       font-family: monospace;
-      padding: 24px;
+      padding: 32px;
     }
     .entry {
       background: #111;
-      border: 1px solid #333;
+      border: 1px solid #222;
       border-radius: 6px;
       padding: 12px 16px;
-      margin-bottom: 8px;
-      color: #ccc;
+      margin-bottom: 12px;
+      font-size: 14px;
     }
-    .entry span {
-      color: #b084f7;
+    .entry strong {
+      color: #ffffff;
     }
   </style>
 </head>
 <body>
-  <h3>🌕 Live Deposits</h3>
+  <h2>🟡 Live Deposits</h2>
   <div id="deposits">
     <p>Waiting for deposits...</p>
   </div>
@@ -34,21 +34,35 @@
     const socket = io("https://sol-deposit-tracker-production.up.railway.app");
     const container = document.getElementById("deposits");
 
-    const render = (deposits) => {
+    const renderDeposits = (deposits) => {
       container.innerHTML = "";
-      deposits.forEach(d => {
-        const div = document.createElement("div");
-        div.className = "entry";
-        div.innerHTML = `
-          +<span>${d.amount} SOL</span> → 
-          <a href="https://solscan.io/tx/${d.signature}" target="_blank" style="color:#999">${d.signature.slice(0, 12)}...</a>
+      deposits.forEach(dep => {
+        const el = document.createElement("div");
+        el.className = "entry";
+        el.innerHTML = `
+          <strong>${dep.amount} SOL</strong> to <code>${dep.wallet}</code><br/>
+          <a href="https://solscan.io/tx/${dep.signature}" target="_blank">${dep.signature}</a>
         `;
-        container.appendChild(div);
+        container.appendChild(el);
       });
     };
 
-    socket.on("history", render);
-    socket.on("newDeposit", d => render([d, ...Array.from(container.children).slice(0, 24)]));
+    socket.on("history", (history) => {
+      if (!history.length) return;
+      renderDeposits(history);
+    });
+
+    socket.on("newDeposit", (deposit) => {
+      const existing = container.querySelector("p");
+      if (existing) container.innerHTML = "";
+      const div = document.createElement("div");
+      div.className = "entry";
+      div.innerHTML = `
+        <strong>${deposit.amount} SOL</strong> to <code>${deposit.wallet}</code><br/>
+        <a href="https://solscan.io/tx/${deposit.signature}" target="_blank">${deposit.signature}</a>
+      `;
+      container.prepend(div);
+    });
   </script>
 </body>
 </html>
