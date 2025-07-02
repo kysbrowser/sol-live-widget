@@ -1,45 +1,59 @@
+
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Live SOL Deposits</title>
-    <style>
-      body {
-        font-family: monospace;
-        background: #111;
-        color: #0f0;
-        padding: 16px;
-        margin: 0;
-        overflow-x: hidden;
-      }
-      h3 {
-        margin-top: 0;
-        margin-bottom: 16px;
-      }
-      .entry {
-        margin-bottom: 8px;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        padding-bottom: 4px;
-      }
-    </style>
-  </head>
-  <body>
-    <h3>💸 Live Deposits</h3>
-    <div id="log">Waiting for deposits...</div>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Live SOL Deposits</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    body {
+      background-color: #0b0b0b;
+      color: #00ff88;
+      font-family: monospace;
+      padding: 20px;
+    }
+    .deposit {
+      border: 1px solid #333;
+      padding: 8px 12px;
+      margin-bottom: 6px;
+      font-size: 14px;
+      background: rgba(255,255,255,0.02);
+    }
+  </style>
+</head>
+<body>
+  <h3>⚙️ Live Deposits</h3>
+  <div id="deposits">Waiting for deposits...</div>
+  <script>
+    const socket = io("https://sol-deposit-tracker-production.up.railway.app");
+    const depositsDiv = document.getElementById("deposits");
 
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script>
-      const log = document.getElementById("log");
-      const socket = io("https://sol-deposit-tracker-production.up.railway.app");
-
-      socket.on("newDeposit", (data) => {
-        const item = document.createElement("div");
-        item.className = "entry";
-        item.textContent = `${data.wallet.slice(0, 6)}... sent ${data.amount} SOL at ${new Date(
-          data.timestamp * 1000
-        ).toLocaleTimeString()}`;
-        log.prepend(item);
+    const render = (deposits) => {
+      depositsDiv.innerHTML = "";
+      deposits.forEach(d => {
+        const el = document.createElement("div");
+        el.className = "deposit";
+        el.innerHTML = \`
+          <strong>\${d.wallet.slice(0, 6)}...</strong> sent 
+          <strong>\${d.amount} SOL</strong> at 
+          \${new Date(d.timestamp * 1000).toLocaleTimeString()}
+        \`;
+        depositsDiv.appendChild(el);
       });
-    </script>
-  </body>
+    };
+
+    let deposits = [];
+
+    socket.on("history", (data) => {
+      deposits = data;
+      render(deposits);
+    });
+
+    socket.on("newDeposit", (data) => {
+      deposits = [data, ...deposits.slice(0, 19)];
+      render(deposits);
+    });
+  </script>
+</body>
 </html>
