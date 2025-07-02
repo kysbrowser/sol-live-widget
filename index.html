@@ -11,9 +11,6 @@
       font-family: monospace;
       padding: 24px;
     }
-    h3 {
-      font-size: 20px;
-    }
     .entry {
       background: #111;
       border: 1px solid #333;
@@ -28,7 +25,7 @@
   </style>
 </head>
 <body>
-  <h3>🌕 <b>Live Deposits</b></h3>
+  <h3>🌕 Live Deposits</h3>
   <div id="deposits">
     <p>Waiting for deposits...</p>
   </div>
@@ -42,12 +39,18 @@
       deposits.forEach(d => {
         const div = document.createElement("div");
         div.className = "entry";
-        div.innerHTML = `<span>${d.sender}</span> sent <b>${d.amount} SOL</b><br>ID: ${d.sig.slice(0, 18)}...`;
+        div.innerHTML = `💸 <span>${d.amount} SOL</span> received<br><a href="https://solscan.io/tx/${d.signature}" target="_blank">${d.signature.slice(0, 32)}...</a>`;
         container.appendChild(div);
       });
     };
 
-    socket.on("deposits", render);
+    socket.on("history", render);
+
+    socket.on("newDeposit", (newOnes) => {
+      console.log("📥 newDeposit:", newOnes);
+      const current = Array.from(document.getElementsByClassName("entry")).map(div => div.textContent);
+      render([...newOnes, ...current]);
+    });
   </script>
 </body>
 </html>
