@@ -39,18 +39,16 @@
       deposits.forEach(d => {
         const div = document.createElement("div");
         div.className = "entry";
-        div.innerHTML = `💸 <span>${d.amount} SOL</span> received<br><a href="https://solscan.io/tx/${d.signature}" target="_blank">${d.signature.slice(0, 32)}...</a>`;
+        div.innerHTML = `
+          +<span>${d.amount} SOL</span> → 
+          <a href="https://solscan.io/tx/${d.signature}" target="_blank" style="color:#999">${d.signature.slice(0, 12)}...</a>
+        `;
         container.appendChild(div);
       });
     };
 
     socket.on("history", render);
-
-    socket.on("newDeposit", (newOnes) => {
-      console.log("📥 newDeposit:", newOnes);
-      const current = Array.from(document.getElementsByClassName("entry")).map(div => div.textContent);
-      render([...newOnes, ...current]);
-    });
+    socket.on("newDeposit", d => render([d, ...Array.from(container.children).slice(0, 24)]));
   </script>
 </body>
 </html>
